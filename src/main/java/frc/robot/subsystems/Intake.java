@@ -1,9 +1,14 @@
 package frc.robot.subsystems;
 
+import java.util.function.BooleanSupplier;
+import java.util.function.DoubleSupplier;
+
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkBase.IdleMode;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.intakeConstants;
 
@@ -17,8 +22,16 @@ public class Intake extends SubsystemBase{
     private CANSparkMax collector2 = new CANSparkMax(intakeConstants.intakeMotor2ID, MotorType.kBrushless);
 
     public Intake() {
+        collector1.restoreFactoryDefaults();
+        collector2.restoreFactoryDefaults();
+
+        collector1.setInverted(true);
+
+        collector1.setIdleMode(IdleMode.kBrake);
+        collector2.setIdleMode(IdleMode.kBrake);
+
         // tell the second spark max to do exactly the same thing as the first spark max
-        collector2.follow(collector1);
+        collector2.follow(collector1, true);
     }
 
     /**
@@ -36,7 +49,11 @@ public class Intake extends SubsystemBase{
      * @param speed the %speed at which to run the intake (-1.0 to 1.0)
      * @return the command to run to set the intakes speed
      */
-    public Command setCommand(double speed) {
-        return this.run(() -> set(speed));
+    public Command setCommand(DoubleSupplier speed) {
+        return this.run(() -> set(speed.getAsDouble()));
+    }
+
+    public Command intakeUntil(BooleanSupplier when) {
+        return setCommand(() -> 0.6).raceWith(Commands.waitUntil(when).andThen(Commands.waitSeconds(1)));
     }
 }

@@ -35,6 +35,7 @@ public class RobotContainer {
     // this command will be run until another command that requires the drive instance is scheduled.
     // at that point, this command will be cancled untill the other command finishes.
     drive.setDefaultCommand(drive.driveCommand(controller::getLeftY, controller::getRightX));
+    intake.setDefaultCommand(intake.setCommand(() -> 0));
 
     // Configure the trigger bindings
     configureBindings();
@@ -50,7 +51,11 @@ public class RobotContainer {
   private void configureBindings() {
     // tell the command scheduler to run the intake's set command whenever the controller's
     // "a" button is pressed and cancle it when the button is released
-    controller.a().whileTrue(intake.setCommand(0.9));
+    controller.a().whileTrue(intake.setCommand(() -> 0.9));
+
+    controller.b().whileTrue(
+            drive.rotateToNote().alongWith(
+                    intake.intakeUntil(drive::isCollected)));
   }
 
   /**
